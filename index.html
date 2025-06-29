@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Web Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .gradient-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: #fff;
+            background-clip: text;
+            font-weight: bold;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .data-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.02);
+        }
+
+        .btn-gradient {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .progress-modern {
+            height: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .progress-modern .progress-bar {
+            background: var(--success-gradient);
+            border-radius: 10px;
+            transition: all 0.5s ease;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            max-width: 350px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .floating-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            background: var(--secondary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .glass-card {
+                margin-bottom: 1rem;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Container -->
+    <div id="notification" class="notification alert alert-success">
+        <strong>Success!</strong> <span id="notificationText"></span>
+    </div>
+
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="glass-card p-4 text-center">
+                    <h1 class="gradient-text mb-0">
+                        <i class="fas fa-chart-line me-3"></i>
+                        Advanced Web Dashboard
+                    </h1>
+                    <p class="text-white-50 mt-2">Showcasing HTML5, CSS3, Bootstrap 5, JavaScript ES6+, AJAX & Promises</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards Row -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="glass-card p-4 position-relative">
+                    <div class="floating-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number" id="userCount">0</div>
+                    <p class="text-white-50 mb-0">Active Users</p>
+                    <div class="progress-modern mt-2">
+                        <div class="progress-bar" id="userProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="glass-card p-4 position-relative">
+                    <div class="floating-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="stat-number" id="salesCount">0</div>
+                    <p class="text-white-50 mb-0">Total Sales</p>
+                    <div class="progress-modern mt-2">
+                        <div class="progress-bar" id="salesProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="glass-card p-4 position-relative">
+                    <div class="floating-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-number" id="revenueCount">$0</div>
+                    <p class="text-white-50 mb-0">Revenue</p>
+                    <div class="progress-modern mt-2">
+                        <div class="progress-bar" id="revenueProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="glass-card p-4 position-relative">
+                    <div class="floating-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="stat-number" id="conversionRate">0%</div>
+                    <p class="text-white-50 mb-0">Conversion Rate</p>
+                    <div class="progress-modern mt-2">
+                        <div class="progress-bar" id="conversionProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Row -->
+        <div class="row">
+            <!-- Data Fetching Section -->
+            <div class="col-lg-6 mb-4">
+                <div class="glass-card p-4">
+                    <h3 class="text-white mb-4">
+                        <i class="fas fa-database me-2"></i>
+                        Data Operations
+                    </h3>
+                    
+                    <div class="mb-3">
+                        <button class="btn btn-gradient me-2" onclick="fetchUserData()">
+                            <span id="userBtn">
+                                <i class="fas fa-user-friends me-2"></i>Fetch Users
+                            </span>
+                        </button>
+                        
+                        <button class="btn btn-gradient me-2" onclick="fetchPosts()">
+                            <span id="postsBtn">
+                                <i class="fas fa-newspaper me-2"></i>Fetch Posts
+                            </span>
+                        </button>
+                        
+                        <button class="btn btn-gradient" onclick="fetchRandomData()">
+                            <span id="randomBtn">
+                                <i class="fas fa-random me-2"></i>Random Data
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="mb-3">
+                        <button class="btn btn-gradient" onclick="performChainedOperations()">
+                            <span id="chainedBtn">
+                                <i class="fas fa-link me-2"></i>Chained Promises
+                            </span>
+                        </button>
+                    </div>
+
+                    <div id="operationStatus" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Results Display -->
+            <div class="col-lg-6 mb-4">
+                <div class="glass-card p-4">
+                    <h3 class="text-white mb-4">
+                        <i class="fas fa-list me-2"></i>
+                        Data Results
+                    </h3>
+                    <div id="dataResults" class="text-white-50">
+                        Click any button to fetch and display data...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Features Row -->
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="glass-card p-4">
+                    <h3 class="text-white mb-4">
+                        <i class="fas fa-cog me-2"></i>
+                        Promise Operations Demo
+                    </h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <button class="btn btn-gradient w-100" onclick="demonstratePromiseAll()">
+                                <i class="fas fa-layer-group me-2"></i>
+                                Promise.all() Demo
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <button class="btn btn-gradient w-100" onclick="demonstratePromiseRace()">
+                                <i class="fas fa-stopwatch me-2"></i>
+                                Promise.race() Demo
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="promiseResults" class="mt-3 text-white-50">
+                        Promise operation results will appear here...
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="glass-card p-4">
+                    <h3 class="text-white mb-4">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        System Status
+                    </h3>
+                    
+                    <div class="mb-3">
+                        <label class="text-white-50 small">API Response Time</label>
+                        <div class="progress-modern">
+                            <div class="progress-bar" id="apiResponseTime" style="width: 85%"></div>
+                        </div>
+                        <small class="text-white-50">85ms avg</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="text-white-50 small">Data Processing</label>
+                        <div class="progress-modern">
+                            <div class="progress-bar" id="dataProcessing" style="width: 92%"></div>
+                        </div>
+                        <small class="text-white-50">92% efficiency</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="text-white-50 small">Server Load</label>
+                        <div class="progress-modern">
+                            <div class="progress-bar" id="serverLoad" style="width: 45%"></div>
+                        </div>
+                        <small class="text-white-50">45% utilization</small>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button class="btn btn-gradient btn-sm" onclick="refreshSystemStatus()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Global variables
+        let operationCount = 0;
+        const API_BASE = 'https://jsonplaceholder.typicode.com';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard initialized');
+            animateStats();
+            startRealTimeUpdates();
+        });
+
+        // Show notification function
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notification.className = `notification alert alert-${type}`;
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Animate statistics on load
+        function animateStats() {
+            const stats = [
+                { element: 'userCount', target: 1247, progress: 'userProgress' },
+                { element: 'salesCount', target: 3892, progress: 'salesProgress' },
+                { element: 'revenueCount', target: 89420, progress: 'revenueProgress', prefix: '$' },
+                { element: 'conversionRate', target: 94, progress: 'conversionProgress', suffix: '%' }
+            ];
+
+            stats.forEach(stat => {
+                animateNumber(stat.element, stat.target, 2000, stat.prefix, stat.suffix);
+                animateProgressBar(stat.progress, stat.target > 100 ? 85 : stat.target);
+            });
+        }
+
+        // Animate number counting
+        function animateNumber(elementId, target, duration, prefix = '', suffix = '') {
+            const element = document.getElementById(elementId);
+            const start = 0;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const current = Math.floor(start + (target - start) * progress);
+                
+                element.textContent = prefix + current.toLocaleString() + suffix;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // Animate progress bar
+        function animateProgressBar(elementId, width) {
+            setTimeout(() => {
+                document.getElementById(elementId).style.width = width + '%';
+            }, 500);
+        }
+
+        // AJAX function with Promise wrapper
+        function makeAjaxRequest(url, options = {}) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                const method = options.method || 'GET';
+                
+                xhr.open(method, url);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            resolve(data);
+                        } catch (e) {
+                            resolve(xhr.responseText);
+                        }
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    reject(new Error('Network error occurred'));
+                };
+                
+                xhr.ontimeout = function() {
+                    reject(new Error('Request timeout'));
+                };
+                
+                xhr.timeout = options.timeout || 10000;
+                xhr.send(options.body ? JSON.stringify(options.body) : null);
+            });
+        }
+
+        // Show loading state
+        function showLoading(buttonId) {
+            const button = document.getElementById(buttonId);
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<span class="loading-spinner"></span> Loading...';
+            button.disabled = true;
+            
+            return () => {
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            };
+        }
+
+        // Fetch user data
+        async function fetchUserData() {
+            const hideLoading = showLoading('userBtn');
+            
+            try {
+                const users = await makeAjaxRequest(`${API_BASE}/users`);
+                
+                const resultsHtml = `
+                    <div class="data-card">
+                        <h5 class="text-white mb-3">
+                            <i class="fas fa-users me-2"></i>Users Data (${users.length} records)
+                        </h5>
+                        ${users.slice(0, 3).map(user => `
+                            <div class="mb-2 p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                <strong class="text-white">${user.name}</strong>
+                                <br><small class="text-white-50">${user.email} | ${user.phone}</small>
+                                <br><small class="text-white-50">${user.address.city}</small>
+                            </div>
+                        `).join('')}
+                        <small class="text-white-50">Showing first 3 of ${users.length} users</small>
+                    </div>
+                `;
+                
+                document.getElementById('dataResults').innerHTML = resultsHtml;
+                showNotification(`Successfully loaded ${users.length} users!`);
+                
+            } catch (error) {
+                document.getElementById('dataResults').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading users: ${error.message}
+                    </div>
+                `;
+                showNotification('Failed to load users', 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Fetch posts data
+        async function fetchPosts() {
+            const hideLoading = showLoading('postsBtn');
+            
+            try {
+                const posts = await makeAjaxRequest(`${API_BASE}/posts`);
+                
+                const resultsHtml = `
+                    <div class="data-card">
+                        <h5 class="text-white mb-3">
+                            <i class="fas fa-newspaper me-2"></i>Posts Data (${posts.length} records)
+                        </h5>
+                        ${posts.slice(0, 3).map(post => `
+                            <div class="mb-2 p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                <strong class="text-white">${post.title}</strong>
+                                <br><small class="text-white-50">${post.body.substring(0, 100)}...</small>
+                            </div>
+                        `).join('')}
+                        <small class="text-white-50">Showing first 3 of ${posts.length} posts</small>
+                    </div>
+                `;
+                
+                document.getElementById('dataResults').innerHTML = resultsHtml;
+                showNotification(`Successfully loaded ${posts.length} posts!`);
+                
+            } catch (error) {
+                document.getElementById('dataResults').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading posts: ${error.message}
+                    </div>
+                `;
+                showNotification('Failed to load posts', 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Generate random data
+        function fetchRandomData() {
+            const hideLoading = showLoading('randomBtn');
+            
+            // Simulate async operation with Promise
+            const randomDataPromise = new Promise((resolve) => {
+                setTimeout(() => {
+                    const data = Array.from({ length: 5 }, (_, i) => ({
+                        id: i + 1,
+                        name: `Item ${i + 1}`,
+                        value: Math.floor(Math.random() * 1000),
+                        status: Math.random() > 0.5 ? 'active' : 'inactive'
+                    }));
+                    resolve(data);
+                }, 1000);
+            });
+
+            randomDataPromise.then(data => {
+                const resultsHtml = `
+                    <div class="data-card">
+                        <h5 class="text-white mb-3">
+                            <i class="fas fa-random me-2"></i>Random Generated Data
+                        </h5>
+                        ${data.map(item => `
+                            <div class="mb-2 p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                <strong class="text-white">${item.name}</strong>
+                                <br><small class="text-white-50">Value: ${item.value} | Status: 
+                                    <span class="badge ${item.status === 'active' ? 'bg-success' : 'bg-secondary'}">${item.status}</span>
+                                </small>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                document.getElementById('dataResults').innerHTML = resultsHtml;
+                showNotification('Random data generated successfully!');
+                hideLoading();
+            });
+        }
+
+        // Demonstrate chained promises
+        async function performChainedOperations() {
+            const hideLoading = showLoading('chainedBtn');
+            const statusElement = document.getElementById('operationStatus');
+            
+            try {
+                statusElement.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Starting chained operations...</div>';
+                
+                // Chain 1: Fetch user
+                const user = await makeAjaxRequest(`${API_BASE}/users/1`);
+                statusElement.innerHTML = '<div class="alert alert-info"><i class="fas fa-user me-2"></i>Fetched user data...</div>';
+                
+                // Chain 2: Fetch user's posts
+                const posts = await makeAjaxRequest(`${API_BASE}/posts?userId=${user.id}`);
+                statusElement.innerHTML = '<div class="alert alert-info"><i class="fas fa-newspaper me-2"></i>Fetched user posts...</div>';
+                
+                // Chain 3: Fetch comments for first post
+                const comments = await makeAjaxRequest(`${API_BASE}/comments?postId=${posts[0].id}`);
+                statusElement.innerHTML = '<div class="alert alert-success"><i class="fas fa-check me-2"></i>Chained operations completed!</div>';
+                
+                const resultsHtml = `
+                    <div class="data-card">
+                        <h5 class="text-white mb-3">
+                            <i class="fas fa-link me-2"></i>Chained Operations Result
+                        </h5>
+                        <div class="mb-3 p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                            <strong class="text-white">User: ${user.name}</strong>
+                            <br><small class="text-white-50">Posts: ${posts.length} | Comments on first post: ${comments.length}</small>
+                        </div>
+                        <div class="p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                            <strong class="text-white">First Post: ${posts[0].title}</strong>
+                            <br><small class="text-white-50">Latest comment: "${comments[0]?.body.substring(0, 50)}..."</small>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('dataResults').innerHTML = resultsHtml;
+                showNotification('Chained operations completed successfully!');
+                
+            } catch (error) {
+                statusElement.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error in chained operations: ${error.message}</div>`;
+                showNotification('Chained operations failed', 'danger');
+            } finally {
+                hideLoading();
+                setTimeout(() => {
+                    statusElement.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // Promise.all demonstration
+        async function demonstratePromiseAll() {
+            const resultsElement = document.getElementById('promiseResults');
+            resultsElement.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Executing Promise.all()...</div>';
+            
+            try {
+                const startTime = performance.now();
+                
+                const [users, posts, comments] = await Promise.all([
+                    makeAjaxRequest(`${API_BASE}/users`),
+                    makeAjaxRequest(`${API_BASE}/posts`),
+                    makeAjaxRequest(`${API_BASE}/comments`)
+                ]);
+                
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                resultsElement.innerHTML = `
+                    <div class="alert alert-success">
+                        <h6 class="mb-2"><i class="fas fa-layer-group me-2"></i>Promise.all() Results</h6>
+                        <p class="mb-1">✅ Loaded ${users.length} users</p>
+                        <p class="mb-1">✅ Loaded ${posts.length} posts</p>
+                        <p class="mb-1">✅ Loaded ${comments.length} comments</p>
+                        <small class="text-muted">Total time: ${duration}ms (parallel execution)</small>
+                    </div>
+                `;
+                
+                showNotification(`Promise.all() completed in ${duration}ms!`);
+                
+            } catch (error) {
+                resultsElement.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Promise.all() failed: ${error.message}
+                    </div>
+                `;
+                showNotification('Promise.all() failed', 'danger');
+            }
+        }
+
+        // Promise.race demonstration
+        function demonstratePromiseRace() {
+            const resultsElement = document.getElementById('promiseResults');
+            resultsElement.innerHTML = '<div class="alert alert-info"><i class="fas fa-stopwatch me-2"></i>Executing Promise.race()...</div>';
+            
+            // Create promises with different delays
+            const slowPromise = new Promise(resolve => setTimeout(() => resolve('Slow operation (3s)'), 3000));
+            const mediumPromise = new Promise(resolve => setTimeout(() => resolve('Medium operation (2s)'), 2000));
+            const fastPromise = new Promise(resolve => setTimeout(() => resolve('Fast operation (1s)'), 1000));
+            
+            const startTime = performance.now();
+            
+            Promise.race([slowPromise, mediumPromise, fastPromise])
+                .then(result => {
+                    const endTime = performance.now();
+                    const duration = Math.round(endTime - startTime);
+                    
+                    resultsElement.innerHTML = `
+                        <div class="alert alert-success">
+                            <h6 class="mb-2"><i class="fas fa-trophy me-2"></i>Promise.race() Winner</h6>
+                            <p class="mb-1">🏆 Winner: ${result}</p>
+                            <p class="mb-1">⏱️ Completed in: ${duration}ms</p>
+                            <small class="text-muted">The fastest promise won the race!</small>
+                        </div>
+                    `;
+                    
+                    showNotification(`Promise.race() won by: ${result}!`);
+                })
+                .catch(error => {
+                    resultsElement.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Promise.race() failed: ${error.message}
+                        </div>
+                    `;
+                    showNotification('Promise.race() failed', 'danger');
+                });
+        }
+
+        // Refresh system status
+        function refreshSystemStatus() {
+            const bars = ['apiResponseTime', 'dataProcessing', 'serverLoad'];
+            
+            bars.forEach(barId => {
+                const randomWidth = Math.floor(Math.random() * 40) + 30; // 30-70%
+                document.getElementById(barId).style.width = randomWidth + '%';
+            });
+            
+            showNotification('System status refreshed!');
+        }
+
+        // Start real-time updates
+        function startRealTimeUpdates() {
+            setInterval(() => {
+                // Simulate real-time data updates
+                const elements = [
+                    { id: 'userCount', min: 1200, max: 1300 },
+                    { id: 'salesCount', min: 3800, max: 4000 },
+                    { id: 'revenueCount', min: 85000, max: 95000, prefix: ' },
+                    { id: 'conversionRate', min: 88, max: 96, suffix: '%' }
+                ];
+
+                elements.forEach(elem => {
+                    const randomValue = Math.floor(Math.random() * (elem.max - elem.min + 1)) + elem.min;
+                    const element = document.getElementById(elem.id);
+                    if (element) {
+                        element.textContent = (elem.prefix || '') + randomValue.toLocaleString() + (elem.suffix || '');
+                        element.classList.add('pulse-animation');
+                        setTimeout(() => element.classList.remove('pulse-animation'), 1000);
+                    }
+                });
+
+                // Update progress bars randomly
+                const progressBars = ['userProgress', 'salesProgress', 'revenueProgress', 'conversionProgress'];
+                progressBars.forEach(barId => {
+                    const randomWidth = Math.floor(Math.random() * 30) + 60; // 60-90%
+                    const bar = document.getElementById(barId);
+                    if (bar) {
+                        bar.style.width = randomWidth + '%';
+                    }
+                });
+
+            }, 5000); // Update every 5 seconds
+        }
+
+        // Advanced Promise patterns demonstration
+        async function demonstrateAdvancedPromises() {
+            console.log('=== Advanced Promise Patterns Demo ===');
+            
+            // 1. Promise with timeout
+            function promiseWithTimeout(promise, timeout) {
+                return Promise.race([
+                    promise,
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Operation timed out')), timeout)
+                    )
+                ]);
+            }
+
+            // 2. Retry mechanism
+            async function retryOperation(operation, maxRetries = 3) {
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        return await operation();
+                    } catch (error) {
+                        if (i === maxRetries - 1) throw error;
+                        console.log(`Retry ${i + 1} failed:`, error.message);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                    }
+                }
+            }
+
+            // 3. Batch processing
+            async function processBatch(items, batchSize = 3) {
+                const results = [];
+                for (let i = 0; i < items.length; i += batchSize) {
+                    const batch = items.slice(i, i + batchSize);
+                    const batchResults = await Promise.all(
+                        batch.map(item => makeAjaxRequest(`${API_BASE}/users/${item}`))
+                    );
+                    results.push(...batchResults);
+                    console.log(`Processed batch ${Math.floor(i / batchSize) + 1}`);
+                }
+                return results;
+            }
+
+            // Demonstrate these patterns
+            try {
+                console.log('1. Promise with timeout...');
+                const timeoutResult = await promiseWithTimeout(
+                    makeAjaxRequest(`${API_BASE}/users/1`),
+                    5000
+                );
+                console.log('Timeout demo success:', timeoutResult.name);
+
+                console.log('2. Retry mechanism...');
+                const retryResult = await retryOperation(async () => {
+                    if (Math.random() > 0.7) throw new Error('Random failure');
+                    return await makeAjaxRequest(`${API_BASE}/users/2`);
+                });
+                console.log('Retry demo success:', retryResult.name);
+
+                console.log('3. Batch processing...');
+                const batchResult = await processBatch([1, 2, 3, 4, 5]);
+                console.log('Batch demo success:', batchResult.length, 'items processed');
+
+            } catch (error) {
+                console.error('Advanced promises demo error:', error.message);
+            }
+        }
+
+        // Custom event handling
+        function setupCustomEvents() {
+            // Create custom events
+            const dataLoadEvent = new CustomEvent('dataLoaded', {
+                detail: { timestamp: Date.now(), source: 'ajax' }
+            });
+
+            const operationCompleteEvent = new CustomEvent('operationComplete', {
+                detail: { operation: 'data-fetch', status: 'success' }
+            });
+
+            // Listen for custom events
+            document.addEventListener('dataLoaded', (e) => {
+                console.log('Data loaded event:', e.detail);
+            });
+
+            document.addEventListener('operationComplete', (e) => {
+                console.log('Operation complete:', e.detail);
+            });
+
+            // Example of dispatching custom events
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn-gradient')) {
+                    document.dispatchEvent(operationCompleteEvent);
+                }
+            });
+        }
+
+        // Error handling patterns
+        class APIError extends Error {
+            constructor(message, status, response) {
+                super(message);
+                this.name = 'APIError';
+                this.status = status;
+                this.response = response;
+            }
+        }
+
+        // Enhanced AJAX with better error handling
+        async function enhancedAjaxRequest(url, options = {}) {
+            try {
+                const response = await makeAjaxRequest(url, options);
+                return response;
+            } catch (error) {
+                // Enhanced error handling
+                if (error.message.includes('404')) {
+                    throw new APIError('Resource not found', 404, error);
+                } else if (error.message.includes('500')) {
+                    throw new APIError('Server error', 500, error);
+                } else if (error.message.includes('timeout')) {
+                    throw new APIError('Request timeout', 408, error);
+                } else {
+                    throw new APIError('Network error', 0, error);
+                }
+            }
+        }
+
+        // Performance monitoring
+        class PerformanceMonitor {
+            constructor() {
+                this.metrics = new Map();
+            }
+
+            startTiming(label) {
+                this.metrics.set(label, performance.now());
+            }
+
+            endTiming(label) {
+                const startTime = this.metrics.get(label);
+                if (startTime) {
+                    const duration = performance.now() - startTime;
+                    console.log(`${label}: ${duration.toFixed(2)}ms`);
+                    this.metrics.delete(label);
+                    return duration;
+                }
+                return null;
+            }
+
+            measureFunction(fn, label) {
+                return async (...args) => {
+                    this.startTiming(label);
+                    try {
+                        const result = await fn(...args);
+                        return result;
+                    } finally {
+                        this.endTiming(label);
+                    }
+                };
+            }
+        }
+
+        // Initialize performance monitor
+        const perfMonitor = new PerformanceMonitor();
+
+        // Wrap key functions with performance monitoring
+        const originalFetchUserData = fetchUserData;
+        fetchUserData = perfMonitor.measureFunction(originalFetchUserData, 'fetchUserData');
+
+        const originalFetchPosts = fetchPosts;
+        fetchPosts = perfMonitor.measureFunction(originalFetchPosts, 'fetchPosts');
+
+        // Local storage simulation (since we can't use real localStorage)
+        class MemoryStorage {
+            constructor() {
+                this.storage = new Map();
+            }
+
+            setItem(key, value) {
+                this.storage.set(key, JSON.stringify(value));
+            }
+
+            getItem(key) {
+                const value = this.storage.get(key);
+                return value ? JSON.parse(value) : null;
+            }
+
+            removeItem(key) {
+                this.storage.delete(key);
+            }
+
+            clear() {
+                this.storage.clear();
+            }
+
+            get length() {
+                return this.storage.size;
+            }
+
+            key(index) {
+                return Array.from(this.storage.keys())[index] || null;
+            }
+        }
+
+        // Initialize memory storage
+        const memoryStorage = new MemoryStorage();
+
+        // Cache management
+        class CacheManager {
+            constructor(storage, ttl = 300000) { // 5 minutes default TTL
+                this.storage = storage;
+                this.ttl = ttl;
+            }
+
+            set(key, data) {
+                const item = {
+                    data: data,
+                    timestamp: Date.now(),
+                    ttl: this.ttl
+                };
+                this.storage.setItem(key, item);
+            }
+
+            get(key) {
+                const item = this.storage.getItem(key);
+                if (!item) return null;
+
+                const now = Date.now();
+                if (now - item.timestamp > item.ttl) {
+                    this.storage.removeItem(key);
+                    return null;
+                }
+
+                return item.data;
+            }
+
+            has(key) {
+                return this.get(key) !== null;
+            }
+
+            clear() {
+                this.storage.clear();
+            }
+        }
+
+        // Initialize cache
+        const cache = new CacheManager(memoryStorage);
+
+        // Enhanced fetch functions with caching
+        async function fetchUserDataWithCache() {
+            const cacheKey = 'users-data';
+            
+            // Check cache first
+            const cachedData = cache.get(cacheKey);
+            if (cachedData) {
+                console.log('Data loaded from cache');
+                showNotification('Data loaded from cache!', 'info');
+                return cachedData;
+            }
+
+            // Fetch from API
+            const hideLoading = showLoading('userBtn');
+            try {
+                const users = await makeAjaxRequest(`${API_BASE}/users`);
+                cache.set(cacheKey, users);
+                console.log('Data loaded from API and cached');
+                return users;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            setupCustomEvents();
+            demonstrateAdvancedPromises();
+            
+            // Test cache functionality
+            setTimeout(() => {
+                console.log('Testing cache...');
+                cache.set('test', { message: 'Hello Cache!' });
+                console.log('Cached item:', cache.get('test'));
+            }, 2000);
+        });
+
+        // Utility functions
+        const utils = {
+            // Debounce function
+            debounce: function(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            },
+
+            // Throttle function
+            throttle: function(func, limit) {
+                let inThrottle;
+                return function() {
+                    const args = arguments;
+                    const context = this;
+                    if (!inThrottle) {
+                        func.apply(context, args);
+                        inThrottle = true;
+                        setTimeout(() => inThrottle = false, limit);
+                    }
+                };
+            },
+
+            // Format numbers
+            formatNumber: function(num) {
+                return new Intl.NumberFormat().format(num);
+            },
+
+            // Generate random data
+            generateRandomData: function(count = 10) {
+                return Array.from({ length: count }, (_, i) => ({
+                    id: i + 1,
+                    name: `Item ${i + 1}`,
+                    value: Math.floor(Math.random() * 1000),
+                    timestamp: new Date(Date.now() - Math.random() * 86400000).toISOString()
+                }));
+            }
+        };
+
+        console.log('🚀 Advanced Web Dashboard loaded successfully!');
+        console.log('Features included:');
+        console.log('- HTML5 semantic structure');
+        console.log('- CSS3 animations and glassmorphism effects');
+        console.log('- Bootstrap 5 responsive design');
+        console.log('- ES6+ JavaScript with async/await');
+        console.log('- AJAX with XMLHttpRequest and Promise wrappers');
+        console.log('- Promise.all() and Promise.race() demonstrations');
+        console.log('- Advanced error handling and retry mechanisms');
+        console.log('- Performance monitoring and caching');
+        console.log('- Real-time data updates');
+        console.log('- Custom events and utility functions');
+    </script>
+</body>
+</html>
