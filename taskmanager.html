@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager - CRUD Application</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 2rem auto;
+            overflow: hidden;
+        }
+        
+        .header-section {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .task-card {
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+        
+        .loading-spinner {
+            display: none;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .priority-high { border-left: 5px solid #dc3545; }
+        .priority-medium { border-left: 5px solid #ffc107; }
+        .priority-low { border-left: 5px solid #28a745; }
+        
+        .stats-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header Section -->
+            <div class="header-section">
+                <h1><i class="fas fa-tasks me-3"></i>Task Manager Pro</h1>
+                <p class="mb-0">Manage your tasks efficiently with CRUD operations</p>
+            </div>
+            
+            <!-- Stats Dashboard -->
+            <div class="row p-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="totalTasks">0</h3>
+                        <p><i class="fas fa-list me-2"></i>Total Tasks</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="completedTasks">0</h3>
+                        <p><i class="fas fa-check-circle me-2"></i>Completed</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="pendingTasks">0</h3>
+                        <p><i class="fas fa-clock me-2"></i>Pending</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h3 id="highPriorityTasks">0</h3>
+                        <p><i class="fas fa-exclamation-triangle me-2"></i>High Priority</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row p-4">
+                <!-- Task Form -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                            <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add New Task</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="taskForm">
+                                <input type="hidden" id="taskId" name="taskId">
+                                
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Title *</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <select class="form-select" id="priority" name="priority">
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="pending" selected>Pending</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="completed">Completed</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="dueDate" class="form-label">Due Date</label>
+                                    <input type="date" class="form-control" id="dueDate" name="dueDate">
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-gradient">
+                                        <span class="loading-spinner spinner-border spinner-border-sm me-2"></span>
+                                        <span class="btn-text">Add Task</span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="cancelEdit" style="display: none;">
+                                        Cancel Edit
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tasks List -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-gradient text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Tasks List</h5>
+                            <div class="d-flex gap-2">
+                                <select class="form-select form-select-sm" id="filterStatus" style="width: auto;">
+                                    <option value="">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                                <select class="form-select form-select-sm" id="filterPriority" style="width: auto;">
+                                    <option value="">All Priority</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                            <div id="tasksContainer">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2">Loading tasks...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage"></div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Application State
+        let tasks = [];
+        let editingTaskId = null;
+        
+        // DOM Elements
+        const taskForm = document.getElementById('taskForm');
+        const tasksContainer = document.getElementById('tasksContainer');
+        const cancelEditBtn = document.getElementById('cancelEdit');
+        const filterStatus = document.getElementById('filterStatus');
+        const filterPriority = document.getElementById('filterPriority');
+        
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+            initializeEventListeners();
+        });
+        
+        // Event Listeners
+        function initializeEventListeners() {
+            taskForm.addEventListener('submit', handleFormSubmit);
+            cancelEditBtn.addEventListener('click', cancelEdit);
+            filterStatus.addEventListener('change', applyFilters);
+            filterPriority.addEventListener('change', applyFilters);
+        }
+        
+        // AJAX Promise-based functions
+        function makeRequest(url, options = {}) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open(options.method || 'GET', url);
+                
+                if (options.headers) {
+                    Object.keys(options.headers).forEach(key => {
+                        xhr.setRequestHeader(key, options.headers[key]);
+                    });
+                }
+                
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            resolve(response);
+                        } catch (e) {
+                            resolve({ success: true, message: xhr.responseText });
+                        }
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    reject(new Error('Network error occurred'));
+                };
+                
+                if (options.body) {
+                    xhr.send(options.body);
+                } else {
+                    xhr.send();
+                }
+            });
+        }
+        
+        // CRUD Operations
+        async function loadTasks() {
+            try {
+                showLoading(true);
+                // Simulate API call - replace with actual PHP endpoint
+                const response = await simulateAPICall('GET', '/api/tasks.php');
+                tasks = response.data || [];
+                renderTasks();
+                updateStats();
+                showToast('Tasks loaded successfully!', 'success');
+            } catch (error) {
+                showToast('Error loading tasks: ' + error.message, 'error');
+                console.error('Error loading tasks:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        async function createTask(taskData) {
+            try {
+                const response = await simulateAPICall('POST', '/api/tasks.php', taskData);
+                if (response.success) {
+                    tasks.push({ ...taskData, id: Date.now(), created_at: new Date().toISOString() });
+                    renderTasks();
+                    updateStats();
+                    showToast('Task created successfully!', 'success');
+                    taskForm.reset();
+                } else {
+                    throw new Error(response.message || 'Failed to create task');
+                }
+            } catch (error) {
+                showToast('Error creating task: ' + error.message, 'error');
+                throw error;
+            }
+        }
+        
+        async function updateTask(id, taskData) {
+            try {
+                const response = await simulateAPICall('PUT', `/api/tasks.php?id=${id}`, taskData);
+                if (response.success) {
+                    const taskIndex = tasks.findIndex(task => task.id == id);
+                    if (taskIndex !== -1) {
+                        tasks[taskIndex] = { ...tasks[taskIndex], ...taskData };
+                        renderTasks();
+                        updateStats();
+                        showToast('Task updated successfully!', 'success');
+                    }
+                } else {
+                    throw new Error(response.message || 'Failed to update task');
+                }
+            } catch (error) {
+                showToast('Error updating task: ' + error.message, 'error');
+                throw error;
+            }
+        }
+        
+        async function deleteTask(id) {
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
+            }
+            
+            try {
+                const response = await simulateAPICall('DELETE', `/api/tasks.php?id=${id}`);
+                if (response.success) {
+                    tasks = tasks.filter(task => task.id != id);
+                    renderTasks();
+                    updateStats();
+                    showToast('Task deleted successfully!', 'success');
+                } else {
+                    throw new Error(response.message || 'Failed to delete task');
+                }
+            } catch (error) {
+                showToast('Error deleting task: ' + error.message, 'error');
+            }
+        }
+        
+        // Event Handlers
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(taskForm);
+            const taskData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                priority: formData.get('priority'),
+                status: formData.get('status'),
+                due_date: formData.get('dueDate')
+            };
+            
+            const submitBtn = taskForm.querySelector('button[type="submit"]');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const spinner = submitBtn.querySelector('.loading-spinner');
+            
+            try {
+                submitBtn.disabled = true;
+                spinner.style.display = 'inline-block';
+                
+                if (editingTaskId) {
+                    btnText.textContent = 'Updating...';
+                    await updateTask(editingTaskId, taskData);
+                    cancelEdit();
+                } else {
+                    btnText.textContent = 'Adding...';
+                    await createTask(taskData);
+                }
+            } catch (error) {
+                console.error('Form submission error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = editingTaskId ? 'Update Task' : 'Add Task';
+            }
+        }
+        
+        function editTask(id) {
+            const task = tasks.find(t => t.id == id);
+            if (!task) return;
+            
+            editingTaskId = id;
+            document.getElementById('taskId').value = id;
+            document.getElementById('title').value = task.title;
+            document.getElementById('description').value = task.description || '';
+            document.getElementById('priority').value = task.priority;
+            document.getElementById('status').value = task.status;
+            document.getElementById('dueDate').value = task.due_date || '';
+            
+            const submitBtn = taskForm.querySelector('button[type="submit"]');
+            submitBtn.querySelector('.btn-text').textContent = 'Update Task';
+            cancelEditBtn.style.display = 'block';
+            
+            // Scroll to form
+            document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function cancelEdit() {
+            editingTaskId = null;
+            taskForm.reset();
+            document.getElementById('taskId').value = '';
+            
+            const submitBtn = taskForm.querySelector('button[type="submit"]');
+            submitBtn.querySelector('.btn-text').textContent = 'Add Task';
+            cancelEditBtn.style.display = 'none';
+        }
+        
+        // UI Functions
+        function renderTasks() {
+            let filteredTasks = [...tasks];
+            
+            // Apply filters
+            if (filterStatus.value) {
+                filteredTasks = filteredTasks.filter(task => task.status === filterStatus.value);
+            }
+            if (filterPriority.value) {
+                filteredTasks = filteredTasks.filter(task => task.priority === filterPriority.value);
+            }
+            
+            if (filteredTasks.length === 0) {
+                tasksContainer.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No tasks found</h5>
+                        <p class="text-muted">Add a new task to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            tasksContainer.innerHTML = filteredTasks.map(task => `
+                <div class="task-card card priority-${task.priority} fade-in">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">${escapeHtml(task.title)}</h6>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="editTask(${task.id})">
+                                        <i class="fas fa-edit me-2"></i>Edit
+                                    </a></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteTask(${task.id})">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        ${task.description ? `<p class="card-text text-muted small">${escapeHtml(task.description)}</p>` : ''}
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <span class="badge status-badge ${getStatusClass(task.status)}">${formatStatus(task.status)}</span>
+                                <span class="badge status-badge ${getPriorityClass(task.priority)}">${formatPriority(task.priority)}</span>
+                            </div>
+                            ${task.due_date ? `<small class="text-muted"><i class="fas fa-calendar me-1"></i>${formatDate(task.due_date)}</small>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateStats() {
+            document.getElementById('totalTasks').textContent = tasks.length;
+            document.getElementById('completedTasks').textContent = tasks.filter(t => t.status === 'completed').length;
+            document.getElementById('pendingTasks').textContent = tasks.filter(t => t.status === 'pending').length;
+            document.getElementById('highPriorityTasks').textContent = tasks.filter(t => t.priority === 'high').length;
+        }
+        
+        function applyFilters() {
+            renderTasks();
+        }
+        
+        function showLoading(show) {
+            // Implementation for loading states
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+            document.getElementById('toastMessage').textContent = message;
+            
+            const toastHeader = document.querySelector('.toast-header i');
+            toastHeader.className = `fas ${type === 'success' ? 'fa-check-circle text-success' : type === 'error' ? 'fa-exclamation-circle text-danger' : 'fa-info-circle text-primary'} me-2`;
+            
+            toast.show();
+        }
+        
+        // Utility Functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function getStatusClass(status) {
+            const classes = {
+                'pending': 'bg-warning text-dark',
+                'in_progress': 'bg-info text-white',
+                'completed': 'bg-success text-white'
+            };
+            return classes[status] || 'bg-secondary text-white';
+        }
+        
+        function getPriorityClass(priority) {
+            const classes = {
+                'high': 'bg-danger text-white',
+                'medium': 'bg-warning text-dark',
+                'low': 'bg-success text-white'
+            };
+            return classes[priority] || 'bg-secondary text-white';
+        }
+        
+        function formatStatus(status) {
+            return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+        
+        function formatPriority(priority) {
+            return priority.charAt(0).toUpperCase() + priority.slice(1);
+        }
+        
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString();
+        }
+        
+        // Simulate API calls (replace with actual AJAX calls to PHP backend)
+        function simulateAPICall(method, url, data = null) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Simulate successful API responses
+                    if (method === 'GET' && url.includes('/api/tasks.php')) {
+                        resolve({
+                            success: true,
+                            data: [
+                                {
+                                    id: 1,
+                                    title: 'Complete project documentation',
+                                    description: 'Write comprehensive documentation for the CRUD application',
+                                    priority: 'high',
+                                    status: 'in_progress',
+                                    due_date: '2025-07-05',
+                                    created_at: '2025-06-28T10:00:00Z'
+                                },
+                                {
+                                    id: 2,
+                                    title: 'Review code changes',
+                                    description: 'Review pull requests and provide feedback',
+                                    priority: 'medium',
+                                    status: 'pending',
+                                    due_date: '2025-07-02',
+                                    created_at: '2025-06-27T14:30:00Z'
+                                },
+                                {
+                                    id: 3,
+                                    title: 'Deploy to production',
+                                    description: '',
+                                    priority: 'high',
+                                    status: 'completed',
+                                    due_date: '2025-06-30',
+                                    created_at: '2025-06-26T09:15:00Z'
+                                }
+                            ]
+                        });
+                    } else {
+                        resolve({ success: true, message: 'Operation completed successfully' });
+                    }
+                }, 1000); // Simulate network delay
+            });
+        }
+    </script>
+</body>
+</html>
